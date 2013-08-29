@@ -16,7 +16,7 @@ clusterEvalQ(cl, { install.packages('glmnet') })
 clusterEvalQ(cl, { install.packages('lhs') })
 clusterEvalQ(cl, { install.packages('DiceDesign') })
 clusterEvalQ(cl, { system('curl -O http://cran.r-project.org/src/contrib/Archive/MASS/MASS_7.3-22.tar.gz ') })
-clusterEvalQ(cl, { install.packages("./MASS_7.3-22.tar.gz", repos=NULL) })
+clusterEvalQ(cl, { install.packages("./MASS_7.3-22.tar.gz", repos=NULL, type="source") })
 stopCluster(cl)
 
 cl <- makePSOCKcluster(workers, master=system("hostname -i", intern=TRUE))

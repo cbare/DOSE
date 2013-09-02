@@ -8,7 +8,7 @@ workers <- do.call(c, lapply(strsplit(lines, " "), function(host) { rep(host[1],
 # install necessary packages
 # stuff that needs to happen once per machine
 hosts <- unique(workers)
-cl <- makePSOCKcluster(hosts)
+cl <- makePSOCKcluster(hosts, master=system("hostname -i", intern=TRUE))
 clusterEvalQ(cl, { system("git clone https://github.com/cbare/DOSE.git") })
 clusterEvalQ(cl, { .libPaths( c('/home/ubuntu/R/library', .libPaths()) ) })
 clusterEvalQ(cl, { options(repos=structure(c(CRAN="http://cran.fhcrc.org/")))  })
@@ -16,7 +16,7 @@ clusterEvalQ(cl, { install.packages('glmnet') })
 clusterEvalQ(cl, { install.packages('lhs') })
 clusterEvalQ(cl, { install.packages('DiceDesign') })
 clusterEvalQ(cl, { system('curl -O http://cran.r-project.org/src/contrib/Archive/MASS/MASS_7.3-22.tar.gz ') })
-clusterEvalQ(cl, { install.packages("./MASS_7.3-22.tar.gz", repos=NULL) })
+clusterEvalQ(cl, { install.packages("./MASS_7.3-22.tar.gz", repos=NULL, type='source') })
 stopCluster(cl)
 
 cl <- makePSOCKcluster(workers, master=system("hostname -i", intern=TRUE))

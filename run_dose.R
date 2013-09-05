@@ -9,6 +9,7 @@ workers <- do.call(c, lapply(strsplit(lines, " "), function(host) { rep(host[1],
 # stuff that needs to happen once per machine
 hosts <- unique(workers)
 cl <- makePSOCKcluster(hosts, master=system("hostname -i", intern=TRUE))
+#clusterEvalQ(cl, { system("cd DOSE; git pull origin master") })
 clusterEvalQ(cl, { system("git clone https://github.com/cbare/DOSE.git") })
 clusterEvalQ(cl, { .libPaths( c('/home/ubuntu/R/library', .libPaths()) ) })
 clusterEvalQ(cl, { options(repos=structure(c(CRAN="http://cran.fhcrc.org/")))  })
@@ -24,22 +25,35 @@ clusterEvalQ(cl, { .libPaths( c('/home/ubuntu/R/library', .libPaths()) ) })
 
 clusterEvalQ(cl, { source("DOSE/dose_code_for_Chris_0.R") })
 
+session.info <- clusterEvalQ(cl, { sessionInfo() })
+
 set.seed(123456789)
 myseeds <- sample(10000:100000, 10000, replace = FALSE)
 alphas <- c(10^(-3:-1), seq(0.2, 0.9, by = 0.1))
 clusterExport(cl, c("myseeds", "alphas"))
 
 load("pilot_design.RData")
+#load("large_sim_design.RData")
 nSim <- nrow(X)
 clusterExport(cl, c("X"))
 
 ## Chris,
 ## Basically, we just need to paralellize the "for loop" below.
+# output <- matrix(NA, nSim, 13)
+# colnames(output) <- c("mse.R", "mse.L", "mse.E", "lambda.R", "lambda.L", 
+#                      "alpha.E", "lambda.E", "n", "p", "phi", "eta", "rho",
+#                      "random.seed")
 
-output <- matrix(NA, nSim, 13)
-colnames(output) <- c("mse.R", "mse.L", "mse.E", "lambda.R", "lambda.L", 
-                      "alpha.E", "lambda.E", "n", "p", "phi", "eta", "rho",
-                      "random.seed")
+## assign node id and start log file
+clusterApply(cl, 1:length(workers), function(i) {
+  node.id <- i
+  log.filename <<- sprintf("dose.large.node%03d.tsv", node.id)
+  log.colnames <- c("i", "mse.R", "mse.L", "mse.E", "lambda.R", "lambda.L", 
+                    "alpha.E", "lambda.E", "n", "p", "phi", "eta", "rho",
+                    "random.seed",
+                    "user", "system", "elapsed")
+  write(log.colnames, ncolumns=length(log.colnames), file=log.filename, sep="\t")
+})
 
 ##for (i in 1:nSim) {
 running.time <- system.time(
@@ -47,10 +61,18 @@ running.time <- system.time(
     1:nSim,
     function(i) {
       try({
-        cat("sim = ", i, "\n")
-        SimDataAndFitModels(seed = myseeds[i], 
-                            sim.pars = X[i,], 
-                            alpha.grid = alphas)
+        #cat("sim = ", i, "\n")
+        t <- system.time(
+          ans <- try({
+            SimDataAndFitModels(seed = myseeds[i], 
+                                sim.pars = X[i,], 
+                                alpha.grid = alphas)
+          })
+        )
+        output <- append(append(c(i=i), ans), summary(t))
+        write.table(output, file=log.filename, append=TRUE,
+                    row.names=FALSE, col.names=FALSE, sep="\t")
+        output
       })
     }))
 

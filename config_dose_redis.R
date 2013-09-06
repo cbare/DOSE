@@ -1,0 +1,8 @@
+.libPaths( c('/home/ubuntu/R/library', .libPaths()) )
+options(repos=structure(c(CRAN="http://cran.fhcrc.org/")))
+install.packages('glmnet')
+install.packages('lhs')
+install.packages('DiceDesign')
+install.packages("./MASS_7.3-22.tar.gz", repos=NULL, type='source')
+install.packages("rredis")
+install.packages("doRedis")

@@ -18,4 +18,4 @@ echo "Running config_dose_redis.R"
 Rscript DOSE/config_dose_redis.R 2>&1 config_dose_redis.log
 
 echo "Running run_dose_redis.R"
-Rscript DOSE/run_dose_redis.R 2>&1 run_dose_redis.log &
+Rscript DOSE/run_dose_redis_worker.R 2>&1 run_dose_redis_worker.log &

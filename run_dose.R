@@ -70,7 +70,7 @@ running.time <- system.time(
           })
         )
         output <- append(append(c(i=i), ans), summary(t))
-        write.table(output, file=log.filename, append=TRUE,
+        write.table(as.list(output), file=log.filename, append=TRUE,
                     row.names=FALSE, col.names=FALSE, sep="\t")
         output
       })

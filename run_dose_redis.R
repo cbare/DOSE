@@ -1,24 +1,26 @@
+## install packages
 source('http://depot.sagebase.org/CRAN.R')
 pkgInstall(c("synapseClient"))
 install.packages('rredis')
+install.packages('doRedis')
 
+# load libraries
 require(rredis)
+require(doRedis)
 require(synapseClient)
 
-
+## set up simulation data
 set.seed(123456789)
 myseeds <- sample(10000:100000, 10000, replace = FALSE)
 alphas <- c(10^(-3:-1), seq(0.2, 0.9, by = 0.1))
 
-redisSet('myseeds', myseeds)
-redisSet('alphas', alphas)
-
-load("pilot_design.RData")
+load("DOSE/pilot_design.RData")
 #load("large_sim_design.RData")
 nSim <- nrow(X)
 
-registerDoRedis('jobs')
-
+redisConnect()
+redisSet('myseeds', myseeds)
+redisSet('alphas', alphas)
 redisSet('X', X)
 
 ## calculate remaining simulations
@@ -26,7 +28,7 @@ checkpoint.entity <- synGet('syn2195791')
 checkpoint <- read.table(getFileLocation(checkpoint.entity), header=T)
 sims <- setdiff(1:nSim, checkpoint$i)
 
-## order simulations by how long they'll take
+## order simulations by (roughly) how long they'll take
 sims <- sims[order(X[sims,1]*X[sims,2], decreasing=TRUE)]
 
 # for (i in sims) {
@@ -34,9 +36,8 @@ sims <- sims[order(X[sims,1]*X[sims,2], decreasing=TRUE)]
 # }
 
 registerDoRedis('jobs')
-ans <- foreach(i in sims) %dopar% {
+ans <- foreach(i=sims, .verbose=TRUE) %dopar% {
   try({
-    #cat("sim = ", i, "\n")
     t <- system.time(
       ans <- try({
         SimDataAndFitModels(seed = myseeds[i], 
@@ -44,7 +45,7 @@ ans <- foreach(i in sims) %dopar% {
                             alpha.grid = alphas)
       })
     )
-    output <- append(append(c(i=i), ans), summary(t))
+    output <- append(append(list(i=i), ans), summary(t))
     write.table(output, file=log.filename, append=TRUE,
                 row.names=FALSE, col.names=FALSE, sep="\t")
     output

@@ -1,7 +1,6 @@
-require(rredis)
+.libPaths( c('/home/ubuntu/R/library', .libPaths()) )
 require(doRedis)
 
-.libPaths( c('/home/ubuntu/R/library', .libPaths()) )
 source("DOSE/dose_code_for_Chris_0.R") 
 
 ## record version info

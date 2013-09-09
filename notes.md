@@ -20,7 +20,7 @@ http://digitheadslabnotebook.blogspot.com/2012/12/r-in-cloud.html
 Like any pointy-haired boss, I want my workers to be disposable. The workers should to be cheap, responsible for their own spin-up, and easily replaced when they die off.
 
 
-
+Why is there so much useless crap in /var/log/cloud-init? But not the output of my user-data script?
 
 
 ### head node
